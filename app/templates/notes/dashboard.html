@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="mb-5 animate-fade-in">
+    <!-- Hero Analytics -->
+    <div class="glass-card mb-5 p-4 border-0 position-relative overflow-hidden" style="background: var(--primary-gradient);">
+        <div class="position-relative z-1">
+            <div class="d-flex flex-column flex-md-row align-items-center text-center text-md-start mb-4">
+                <img src="{{ url_for('static', filename='profile_pics/' + current_user.avatar) }}" class="avatar-lg me-md-4 mb-3 mb-md-0 shadow-lg border-white border-opacity-25">
+                <div class="text-white">
+                    <h1 class="fw-bold mb-1">Hello, {{ current_user.username }}!</h1>
+                    <p class="mb-0 opacity-75 lead">Your study statistics and saved knowledge in one place.</p>
+                </div>
+                <div class="ms-md-auto mt-4 mt-md-0">
+                    <a href="{{ url_for('notes.upload') }}" class="btn btn-light btn-lg px-4 fw-bold shadow-sm">
+                        <i class="fas fa-plus-circle me-2"></i>Upload Note
+                    </a>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-6 col-md-3">
+                    <div class="bg-white bg-opacity-10 p-3 rounded-4 border border-white border-opacity-10 text-center">
+                        <span class="d-block small text-white opacity-75">Uploads</span>
+                        <span class="fw-bold fs-4 text-white">{{ notes|length }}</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="bg-white bg-opacity-10 p-3 rounded-4 border border-white border-opacity-10 text-center">
+                        <span class="d-block small text-white opacity-75">Downloads</span>
+                        <span class="fw-bold fs-4 text-white">{{ total_downloads }}</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="bg-white bg-opacity-10 p-3 rounded-4 border border-white border-opacity-10 text-center">
+                        <span class="d-block small text-white opacity-75">Total Likes</span>
+                        <span class="fw-bold fs-4 text-white">{{ total_likes }}</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="bg-white bg-opacity-10 p-3 rounded-4 border border-white border-opacity-10 text-center">
+                        <span class="d-block small text-white opacity-75">Saved</span>
+                        <span class="fw-bold fs-4 text-white">{{ saved_notes|length }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs for Content -->
+    <ul class="nav nav-pills mb-4 gap-2" id="dashboardTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="btn btn-outline-primary active px-4 py-2 rounded-pill" id="my-notes-tab" data-bs-toggle="pill" data-bs-target="#my-notes" type="button" role="tab">
+                <i class="fas fa-file-alt me-2"></i>My Uploads
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="btn btn-outline-warning px-4 py-2 rounded-pill" id="saved-notes-tab" data-bs-toggle="pill" data-bs-target="#saved-notes" type="button" role="tab">
+                <i class="fas fa-bookmark me-2"></i>Saved Notes
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="dashboardTabsContent">
+        <!-- My Uploads -->
+        <div class="tab-pane fade show active" id="my-notes" role="tabpanel">
+            <div class="row g-4">
+                {% for note in notes %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card h-100 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <span class="badge rounded-pill bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 px-3 py-2">
+                                Semester {{ note.semester }}
+                            </span>
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('notes.edit_note', note_id=note.id) }}" class="btn btn-sm btn-outline-light rounded-pill"><i class="fas fa-edit"></i></a>
+                                <form action="{{ url_for('notes.delete_note', note_id=note.id) }}" method="POST" onsubmit="return confirm('Delete this note?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                        <h4 class="fw-bold mb-2">{{ note.title }}</h4>
+                        <p class="text-info small mb-3">{{ note.subject }}</p>
+                        <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top border-secondary border-opacity-25">
+                            <div class="d-flex gap-3 small text-muted">
+                                <span><i class="fas fa-heart text-danger me-1"></i>{{ note.likes|length }}</span>
+                                <span><i class="fas fa-download text-info me-1"></i>{{ note.downloads }}</span>
+                            </div>
+                            <a href="{{ url_for('notes.note_details', note_id=note.id) }}" class="btn btn-sm btn-secondary-custom">Details</a>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12">
+                    <div class="empty-state glass-card py-5">
+                        <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-muted"></i>
+                        <h3>Share your knowledge</h3>
+                        <p class="text-muted">You haven't uploaded any notes yet.</p>
+                        <a href="{{ url_for('notes.upload') }}" class="btn btn-primary-custom">Upload Now</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Saved Notes -->
+        <div class="tab-pane fade" id="saved-notes" role="tabpanel">
+            <div class="row g-4">
+                {% for note in saved_notes %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card h-100 d-flex flex-column border-warning border-opacity-10">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <span class="badge rounded-pill bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25 px-3 py-2">
+                                Semester {{ note.semester }}
+                            </span>
+                            <form action="{{ url_for('notes.bookmark_note', note_id=note.id) }}" method="POST">
+                                <button type="submit" class="btn btn-sm text-warning p-0"><i class="fas fa-bookmark"></i></button>
+                            </form>
+                        </div>
+                        <h4 class="fw-bold mb-2">{{ note.title }}</h4>
+                        <p class="text-info small mb-3">{{ note.subject }}</p>
+                        <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top border-secondary border-opacity-25">
+                            <span class="small text-muted">By {{ note.uploader.username }}</span>
+                            <a href="{{ url_for('notes.note_details', note_id=note.id) }}" class="btn btn-sm btn-secondary-custom">View Note</a>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12">
+                    <div class="empty-state glass-card py-5 border-warning border-opacity-10">
+                        <i class="fas fa-bookmark fa-3x mb-3 text-muted"></i>
+                        <h3>Your collection is empty</h3>
+                        <p class="text-muted">Save interesting notes to find them later.</p>
+                        <a href="{{ url_for('notes.browse') }}" class="btn btn-outline-warning">Browse Notes</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}{{ note.title }}{% endblock %}
+
+{% block content %}
+<div class="mb-5 animate-fade-in">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('notes.browse') }}" class="text-primary text-decoration-none">Browse</a></li>
+            <li class="breadcrumb-item active text-muted" aria-current="page">{{ note.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Sidebar Details & AI Tools -->
+        <div class="col-lg-4 order-lg-2">
+            <div class="glass-card mb-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h3 class="fw-bold mb-0">{{ note.title }}</h3>
+                    {% if current_user.id == note.user_id %}
+                    <div class="dropdown">
+                        <button class="btn btn-link text-muted p-0" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow border-secondary">
+                            <li><a class="dropdown-item" href="{{ url_for('notes.edit_note', note_id=note.id) }}"><i class="fas fa-edit me-2"></i>Edit</a></li>
+                            <li><hr class="dropdown-divider border-secondary"></li>
+                            <li>
+                                <form action="{{ url_for('notes.delete_note', note_id=note.id) }}" method="POST" onsubmit="return confirm('Delete this note?');">
+                                    <button type="submit" class="dropdown-item text-danger"><i class="fas fa-trash me-2"></i>Delete</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <p class="text-primary mb-4 fw-semibold"><i class="fas fa-tag me-2"></i>{{ note.subject }}</p>
+
+                <!-- AI Summary Widget -->
+                <div class="ai-card glass-card mb-4 p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="ai-badge">AI Summary</span>
+                        <button id="summarizeBtn" class="btn btn-sm btn-link text-info p-0 text-decoration-none" {% if note.ai_summary %}style="display:none;"{% endif %}>
+                            <i class="fas fa-magic me-1"></i>Generate
+                        </button>
+                    </div>
+                    <div id="summaryContent" class="small text-light opacity-75">
+                        {% if note.ai_summary %}
+                            {{ note.ai_summary }}
+                        {% else %}
+                            <p class="mb-0 text-muted italic">No summary generated yet.</p>
+                        {% endif %}
+                    </div>
+                    <div id="summaryLoading" class="skeleton" style="height: 60px; display: none; border-radius: 10px;"></div>
+                </div>
+
+                <!-- Learning Tools -->
+                <div class="row g-2 mb-4">
+                    <div class="col-6">
+                        <a href="{{ url_for('notes.generate_quiz', note_id=note.id) }}" class="btn btn-outline-info w-100 btn-sm py-2">
+                            <i class="fas fa-question-circle mb-1 d-block"></i>Take Quiz
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{{ url_for('notes.generate_flashcards', note_id=note.id) }}" class="btn btn-outline-warning w-100 btn-sm py-2">
+                            <i class="fas fa-clone mb-1 d-block"></i>Flashcards
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex gap-2 mb-4">
+                    <form action="{{ url_for('notes.like_note', note_id=note.id) }}" method="POST" class="flex-grow-1">
+                        <button type="submit" class="btn {% if user_liked %}btn-danger{% else %}btn-outline-danger{% endif %} w-100 fw-bold">
+                            <i class="fas fa-heart me-2"></i>{{ note.likes|length }}
+                        </button>
+                    </form>
+                    <form action="{{ url_for('notes.bookmark_note', note_id=note.id) }}" method="POST">
+                        <button type="submit" class="btn {% if user_bookmarked %}btn-warning{% else %}btn-outline-warning{% endif %} fw-bold">
+                            <i class="fas fa-bookmark"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('notes.download_file', filename=note.filename) }}" class="btn btn-primary-custom btn-lg shadow-sm">
+                        <i class="fas fa-download me-2"></i>Download PDF
+                    </a>
+                </div>
+            </div>
+
+            <!-- AI Chat Assistant -->
+            <div class="glass-card p-0 overflow-hidden mb-4">
+                <div class="bg-dark p-3 d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-25">
+                    <span class="fw-bold small text-info"><i class="fas fa-robot me-2"></i>Study Assistant</span>
+                    <span class="ai-badge" style="font-size: 0.5rem;">BETA</span>
+                </div>
+                <div class="chat-widget">
+                    <div id="chatMessages" class="chat-messages d-flex flex-column">
+                        {% for chat in chat_history %}
+                        <div class="message user">{{ chat.question }}</div>
+                        <div class="message ai">{{ chat.answer }}</div>
+                        {% else %}
+                        <div class="text-center py-5 text-muted small">
+                            <i class="fas fa-comments fa-2x mb-2 opacity-25"></i>
+                            <p>Ask anything about this note!</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="chat-input-container">
+                        <div class="input-group">
+                            <input type="text" id="chatInput" class="form-control bg-dark border-secondary text-white" placeholder="Type your question...">
+                            <button id="sendChatBtn" class="btn btn-info"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PDF Preview & Comments -->
+        <div class="col-lg-8 order-lg-1">
+            <div class="glass-card p-0 overflow-hidden mb-4">
+                <div class="bg-dark p-3 d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-25">
+                    <span class="fw-semibold text-muted small"><i class="fas fa-file-pdf me-2 text-danger"></i>PDF Preview</span>
+                    <a href="{{ url_for('notes.download_file', filename=note.filename) }}" class="btn btn-sm btn-outline-light"><i class="fas fa-expand"></i></a>
+                </div>
+                <div class="pdf-container" style="height: 800px;">
+                    <iframe src="{{ url_for('static', filename='uploads/' + note.filename) }}#toolbar=0" width="100%" height="100%" style="border: none;"></iframe>
+                </div>
+            </div>
+
+            <!-- Comments -->
+            <div class="glass-card">
+                <h4 class="fw-bold mb-4">Community Discussion</h4>
+                <form method="POST" action="" class="mb-4">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.text(class="form-control bg-dark border-secondary text-white", rows="3", placeholder="Share your thoughts...") }}
+                    </div>
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-outline-primary") }}
+                    </div>
+                </form>
+                {% for comment in note.comments|sort(attribute='created_at', reverse=True) %}
+                <div class="comment-box mb-3 border-start border-primary ps-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-bold small">{{ comment.user.username }}</span>
+                        <span class="text-muted small">{{ comment.created_at.strftime('%d %b') }}</span>
+                    </div>
+                    <p class="mb-0 small opacity-75">{{ comment.text }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // AI Summarization
+    document.getElementById('summarizeBtn')?.addEventListener('click', async () => {
+        const btn = document.getElementById('summarizeBtn');
+        const content = document.getElementById('summaryContent');
+        const loading = document.getElementById('summaryLoading');
+        
+        btn.style.display = 'none';
+        content.style.display = 'none';
+        loading.style.display = 'block';
+        
+        try {
+            const response = await fetch("{{ url_for('notes.summarize_note', note_id=note.id) }}", { method: 'POST' });
+            const data = await response.json();
+            content.innerText = data.summary;
+        } catch (error) {
+            content.innerText = "Error generating summary. Please try again.";
+        } finally {
+            loading.style.display = 'none';
+            content.style.display = 'block';
+        }
+    });
+
+    // AI Chat
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendChatBtn');
+    const messagesContainer = document.getElementById('chatMessages');
+
+    const appendMessage = (text, type) => {
+        const div = document.createElement('div');
+        div.className = `message ${type}`;
+        div.innerText = text;
+        messagesContainer.appendChild(div);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    };
+
+    sendBtn.addEventListener('click', async () => {
+        const question = chatInput.value.trim();
+        if (!question) return;
+
+        chatInput.value = '';
+        appendMessage(question, 'user');
+        
+        // Add loading indicator
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'message ai skeleton';
+        loadingDiv.style.width = '100px';
+        loadingDiv.style.height = '30px';
+        messagesContainer.appendChild(loadingDiv);
+
+        try {
+            const response = await fetch("{{ url_for('notes.chat_with_note', note_id=note.id) }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question })
+            });
+            const data = await response.json();
+            messagesContainer.removeChild(loadingDiv);
+            appendMessage(data.answer, 'ai');
+        } catch (error) {
+            messagesContainer.removeChild(loadingDiv);
+            appendMessage("Error communicating with AI.", 'ai');
+        }
+    });
+
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendBtn.click();
+    });
+</script>
+{% endblock %}

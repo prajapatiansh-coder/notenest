@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Note - {{ note.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate-fade-in">
+    <div class="col-md-8">
+        <div class="glass-card mt-4">
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary rounded-3 p-3 me-3 text-white shadow">
+                    <i class="fas fa-edit fa-2x"></i>
+                </div>
+                <div>
+                    <h2 class="fw-bold mb-0">Edit Note</h2>
+                    <p class="text-muted mb-0">Update your study material details</p>
+                </div>
+            </div>
+
+            <form method="POST" action="" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small text-muted fw-bold text-uppercase">Title</label>
+                        {{ form.title(class="form-control bg-dark border-secondary text-white") }}
+                        {% for error in form.title.errors %}
+                            <span class="text-danger small">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label small text-muted fw-bold text-uppercase">Subject</label>
+                        {{ form.subject(class="form-control bg-dark border-secondary text-white") }}
+                        {% for error in form.subject.errors %}
+                            <span class="text-danger small">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small text-muted fw-bold text-uppercase">Semester</label>
+                    {{ form.semester(class="form-select bg-dark border-secondary text-white") }}
+                    {% for error in form.semester.errors %}
+                        <span class="text-danger small">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small text-muted fw-bold text-uppercase">Description</label>
+                    {{ form.description(class="form-control bg-dark border-secondary text-white", rows="4") }}
+                    {% for error in form.description.errors %}
+                        <span class="text-danger small">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label small text-muted fw-bold text-uppercase">Replace PDF (Optional)</label>
+                    {{ form.note_file(class="form-control bg-dark border-secondary text-white") }}
+                    <small class="text-muted mt-2 d-block">Current file: <span class="text-primary">{{ note.filename[:20] }}...</span></small>
+                    {% for error in form.note_file.errors %}
+                        <span class="text-danger small">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="d-grid gap-3">
+                    {{ form.submit(class="btn btn-primary-custom btn-lg") }}
+                    <a href="{{ url_for('notes.note_details', note_id=note.id) }}" class="btn btn-link text-muted text-decoration-none">Cancel and Return</a>
+                </div>
+            </form>
+        </div>
+        
+        <div class="mt-4 p-4 glass-card border-danger border-opacity-25 bg-danger bg-opacity-5">
+            <h5 class="fw-bold text-danger mb-3">Danger Zone</h5>
+            <p class="small text-muted mb-3">Once you delete a note, there is no going back. Please be certain.</p>
+            <form action="{{ url_for('notes.delete_note', note_id=note.id) }}" method="POST" onsubmit="return confirm('Are you absolutely sure? This action cannot be undone.');">
+                <button type="submit" class="btn btn-outline-danger w-100">Delete This Note Forever</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

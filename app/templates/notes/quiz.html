@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz - {{ note.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate-fade-in">
+    <div class="col-md-8">
+        <div class="glass-card mb-4 text-center">
+            <h2 class="fw-bold mb-2">AI Knowledge Quiz</h2>
+            <p class="text-primary fw-semibold mb-0">{{ note.title }}</p>
+        </div>
+
+        <div id="quizContainer">
+            {% for quiz in quizzes %}
+            <div class="glass-card mb-4 quiz-card animate-fade-in" id="quiz-{{ loop.index }}" style="{% if not loop.first %}display:none;{% endif %}">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <span class="badge bg-primary px-3">Question {{ loop.index }} of {{ quizzes|length }}</span>
+                    <span class="ai-badge">{{ quiz.question_type }}</span>
+                </div>
+                
+                <h4 class="fw-bold mb-4">{{ quiz.question }}</h4>
+
+                <div class="options-list d-grid gap-3">
+                    {% if quiz.question_type == 'mcq' or quiz.question_type == 'tf' %}
+                        {% for option in quiz.options %}
+                        <button class="btn btn-outline-light text-start p-3 rounded-4 option-btn" data-answer="{{ quiz.answer }}" data-option="{{ option }}">
+                            {{ option }}
+                        </button>
+                        {% endfor %}
+                    {% else %}
+                        <div class="mb-3">
+                            <textarea class="form-control bg-dark border-secondary text-white" rows="3" placeholder="Type your answer here..."></textarea>
+                        </div>
+                        <button class="btn btn-primary-custom w-100 show-answer-btn" data-answer="{{ quiz.answer }}">Show Correct Answer</button>
+                    {% endif %}
+                </div>
+
+                <div class="mt-4 p-3 rounded-4 border border-success bg-success bg-opacity-10 answer-reveal" style="display:none;">
+                    <p class="mb-0 small fw-bold text-success"><i class="fas fa-check-circle me-2"></i>Correct Answer:</p>
+                    <p class="mb-0">{{ quiz.answer }}</p>
+                </div>
+
+                <div class="d-flex justify-content-between mt-5 pt-3 border-top border-secondary border-opacity-25">
+                    <button class="btn btn-link text-muted prev-btn" {% if loop.first %}disabled{% endif %}>Previous</button>
+                    <button class="btn btn-info px-4 next-btn" {% if loop.last %}style="display:none;"{% endif %}>Next Question</button>
+                    {% if loop.last %}
+                    <a href="{{ url_for('notes.note_details', note_id=note.id) }}" class="btn btn-success px-4">Finish Quiz</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.option-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const selected = this.getAttribute('data-option');
+            const correct = this.getAttribute('data-answer');
+            const parent = this.closest('.quiz-card');
+            
+            // Disable all buttons in this card
+            parent.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+            
+            if (selected === correct) {
+                this.classList.remove('btn-outline-light');
+                this.classList.add('btn-success');
+            } else {
+                this.classList.remove('btn-outline-light');
+                this.classList.add('btn-danger');
+                // Highlight correct one
+                parent.querySelectorAll('.option-btn').forEach(b => {
+                    if (b.getAttribute('data-option') === correct) {
+                        b.classList.remove('btn-outline-light');
+                        b.classList.add('btn-success');
+                    }
+                });
+            }
+            
+            parent.querySelector('.answer-reveal').style.display = 'block';
+        });
+    });
+
+    document.querySelectorAll('.show-answer-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const parent = this.closest('.quiz-card');
+            parent.querySelector('.answer-reveal').style.display = 'block';
+            this.style.display = 'none';
+        });
+    });
+
+    document.querySelectorAll('.next-btn').forEach((btn, idx) => {
+        btn.addEventListener('click', function() {
+            document.getElementById(`quiz-${idx + 1}`).style.display = 'none';
+            document.getElementById(`quiz-${idx + 2}`).style.display = 'block';
+        });
+    });
+
+    document.querySelectorAll('.prev-btn').forEach((btn, idx) => {
+        btn.addEventListener('click', function() {
+            document.getElementById(`quiz-${idx + 1}`).style.display = 'none';
+            document.getElementById(`quiz-${idx}`).style.display = 'block';
+        });
+    });
+</script>
+{% endblock %}

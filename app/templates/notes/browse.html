@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Notes{% endblock %}
+
+{% block content %}
+<div class="mb-5 animate-fade-in">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-6">
+            <h2 class="fw-bold mb-0"><i class="fas fa-search me-2 text-primary"></i>Browse All Notes</h2>
+            <p class="text-muted mb-0">Find the best study materials for your courses</p>
+        </div>
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('notes.upload') }}" class="btn btn-primary-custom">
+                <i class="fas fa-plus-circle me-2"></i>Upload New Note
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <div class="glass-card mb-5">
+        <form action="{{ url_for('notes.browse') }}" method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label small text-muted fw-bold text-uppercase">Search Keyword</label>
+                <div class="position-relative">
+                    <input type="text" name="q" class="form-control bg-dark border-secondary text-white" placeholder="Search title, subject..." value="{{ search_query }}">
+                </div>
+                <div class="mt-2">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="semantic" value="true" id="semanticToggle" {% if semantic %}checked{% endif %}>
+                        <label class="form-check-label text-white small" for="semanticToggle">
+                            <i class="fas fa-robot me-1 text-info"></i> Semantic Search (AI)
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted fw-bold text-uppercase">Subject</label>
+                <select name="subject" class="form-select bg-dark border-secondary text-white">
+                    <option value="">All Subjects</option>
+                    {% for subject in subjects %}
+                    <option value="{{ subject }}" {% if current_subject == subject %}selected{% endif %}>{{ subject }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted fw-bold text-uppercase">Semester</label>
+                <select name="semester" class="form-select bg-dark border-secondary text-white">
+                    <option value="">All Semesters</option>
+                    {% for i in range(1, 9) %}
+                    <option value="{{ i }}" {% if current_semester == i|string %}selected{% endif %}>Semester {{ i }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary-custom w-100">Filter</button>
+                <a href="{{ url_for('notes.browse') }}" class="btn btn-outline-secondary w-100" title="Clear Filters"><i class="fas fa-times"></i></a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Section -->
+    <div class="row g-4 mb-5">
+        {% for note in notes.items %}
+        <div class="col-md-6 col-lg-4">
+            <div class="glass-card h-100 d-flex flex-column hover-lift">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <span class="badge rounded-pill bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 px-3 py-2">
+                        Semester {{ note.semester }}
+                    </span>
+                    <small class="text-muted"><i class="fas fa-download me-1"></i>{{ note.downloads }}</small>
+                </div>
+                <h4 class="fw-bold mb-2">{{ note.title }}</h4>
+                <p class="text-info small mb-3"><i class="fas fa-tag me-1"></i>{{ note.subject }}</p>
+                <p class="text-muted small mb-4 flex-grow-1">
+                    {{ note.description[:100] }}{% if note.description|length > 100 %}...{% endif %}
+                </p>
+                <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top border-secondary">
+                    <a href="{{ url_for('auth.profile', username=note.uploader.username) }}" class="text-decoration-none text-light d-flex align-items-center">
+                        <img src="{{ url_for('static', filename='profile_pics/' + note.uploader.avatar) }}" class="avatar-xs me-2">
+                        <span class="small">{{ note.uploader.username }}</span>
+                    </a>
+                    <a href="{{ url_for('notes.note_details', note_id=note.id) }}" class="btn btn-sm btn-secondary-custom">
+                        View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="empty-state glass-card py-5 text-center">
+                <div class="mb-4">
+                    <i class="fas fa-search-minus fa-4x text-muted opacity-25"></i>
+                </div>
+                <h3 class="fw-bold text-white">No study materials match your search</h3>
+                <p class="text-muted lead mb-4">Try adjusting your filters or search keywords. <br>Be the first to upload notes for this category!</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{{ url_for('notes.browse') }}" class="btn btn-outline-secondary">Clear All Filters</a>
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('notes.upload') }}" class="btn btn-primary-custom">Upload First Note</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if notes.pages > 1 %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% for page_num in notes.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page_num %}
+                    {% if notes.page == page_num %}
+                        <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('notes.browse', page=page_num, q=search_query, subject=current_subject, semester=current_semester) }}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

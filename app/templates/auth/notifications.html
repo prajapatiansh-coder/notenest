@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate-fade-in">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0"><i class="fas fa-bell me-2 text-primary"></i>Your Notifications</h2>
+            <a href="{{ url_for('auth.clear_notifications') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                Clear All
+            </a>
+        </div>
+
+        <div class="glass-card p-0 overflow-hidden">
+            {% for notif in notifications %}
+            <a href="{{ url_for('auth.mark_read', notif_id=notif.id) }}" class="notif-item d-flex align-items-center text-decoration-none {% if not notif.is_read %}unread{% endif %}">
+                <div class="me-4 ms-2">
+                    <div class="bg-primary bg-opacity-25 rounded-circle p-3 text-primary d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="fas {% if 'like' in notif.message %}fa-heart text-danger{% elif 'comment' in notif.message %}fa-comment{% else %}fa-info-circle{% endif %} fa-lg"></i>
+                    </div>
+                </div>
+                <div class="flex-grow-1">
+                    <p class="mb-1 text-white fw-medium">{{ notif.message }}</p>
+                    <small class="text-muted">{{ notif.created_at.strftime('%d %B %Y at %H:%M') }}</small>
+                </div>
+                <div class="ms-3 me-2">
+                    {% if not notif.is_read %}
+                    <span class="badge rounded-pill bg-primary" style="padding: 5px;">&nbsp;</span>
+                    {% endif %}
+                </div>
+            </a>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-bell-slash fa-4x mb-3 text-muted opacity-25"></i>
+                <h4 class="text-muted">All caught up!</h4>
+                <p class="text-muted mb-0">You don't have any notifications right now.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

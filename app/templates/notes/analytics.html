@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Advanced Analytics{% endblock %}
+
+{% block content %}
+<div class="mb-5 animate-fade-in">
+    <div class="glass-card mb-5 p-4 border-0 position-relative overflow-hidden" style="background: var(--secondary-gradient);">
+        <div class="position-relative z-1 text-center py-4">
+            <h1 class="display-4 fw-bold text-white mb-2"><i class="fas fa-chart-line me-3"></i>Analytics Dashboard</h1>
+            <p class="lead text-white opacity-75">Professional insights into your learning activity and platform engagement.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- AI Usage Chart -->
+        <div class="col-md-6">
+            <div class="glass-card h-100">
+                <h4 class="fw-bold mb-4">AI Feature Engagement</h4>
+                <canvas id="aiUsageChart" height="300"></canvas>
+            </div>
+        </div>
+
+        <!-- Note Performance Chart -->
+        <div class="col-md-6">
+            <div class="glass-card h-100">
+                <h4 class="fw-bold mb-4">Top Note Performance</h4>
+                <canvas id="notePerformanceChart" height="300"></canvas>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="col-md-4">
+            <div class="analytics-card text-center p-4">
+                <div class="text-info mb-2"><i class="fas fa-file-alt fa-2x"></i></div>
+                <h2 class="fw-bold">{{ note_titles|length }}</h2>
+                <p class="text-muted small mb-0">Total Notes Uploaded</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="analytics-card text-center p-4">
+                <div class="text-warning mb-2"><i class="fas fa-download fa-2x"></i></div>
+                <h2 class="fw-bold">{{ note_downloads|sum }}</h2>
+                <p class="text-muted small mb-0">Total Downloads</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="analytics-card text-center p-4">
+                <div class="text-danger mb-2"><i class="fas fa-heart fa-2x"></i></div>
+                <h2 class="fw-bold">{{ note_likes|sum }}</h2>
+                <p class="text-muted small mb-0">Total Likes</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // AI Usage Chart
+        const aiCtx = document.getElementById('aiUsageChart').getContext('2d');
+        new Chart(aiCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ ai_usage_labels|tojson }},
+                datasets: [{
+                    data: {{ ai_usage_data|tojson }},
+                    backgroundColor: [
+                        'rgba(142, 45, 226, 0.7)',
+                        'rgba(0, 242, 254, 0.7)',
+                        'rgba(255, 193, 7, 0.7)',
+                        'rgba(255, 65, 108, 0.7)'
+                    ],
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#94a3b8' }
+                    }
+                }
+            }
+        });
+
+        // Note Performance Chart
+        const noteCtx = document.getElementById('notePerformanceChart').getContext('2d');
+        new Chart(noteCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ note_titles|tojson }},
+                datasets: [{
+                    label: 'Downloads',
+                    data: {{ note_downloads|tojson }},
+                    backgroundColor: 'rgba(37, 117, 252, 0.7)',
+                    borderRadius: 8
+                }, {
+                    label: 'Likes',
+                    data: {{ note_likes|tojson }},
+                    backgroundColor: 'rgba(255, 65, 108, 0.7)',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: '#94a3b8' }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Flashcards - {{ note.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate-fade-in">
+    <div class="col-md-8 text-center">
+        <div class="glass-card mb-5">
+            <h2 class="fw-bold mb-2">AI Flashcards</h2>
+            <p class="text-primary mb-0">{{ note.title }}</p>
+        </div>
+
+        <div id="flashcardsContainer">
+            {% for card in flashcards %}
+            <div class="flashcard-wrapper mb-5" id="card-{{ loop.index }}" style="{% if not loop.first %}display:none;{% endif %}">
+                <div class="flashcard-container" onclick="this.classList.toggle('flipped')">
+                    <div class="flashcard-inner">
+                        <div class="flashcard-front">
+                            <p class="mb-0">{{ card.front_text }}</p>
+                            <div class="position-absolute bottom-0 end-0 p-4 opacity-50">
+                                <i class="fas fa-redo-alt fa-xs"></i>
+                            </div>
+                        </div>
+                        <div class="flashcard-back">
+                            <p class="mb-0">{{ card.back_text }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-5 d-flex justify-content-center align-items-center gap-4">
+                    <button class="btn btn-outline-secondary rounded-circle p-3 prev-card" {% if loop.first %}disabled{% endif %}>
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <span class="fw-bold text-muted">Card {{ loop.index }} / {{ flashcards|length }}</span>
+                    <button class="btn btn-primary-custom rounded-circle p-3 next-card" {% if loop.last %}disabled{% endif %}>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-4">
+            <a href="{{ url_for('notes.note_details', note_id=note.id) }}" class="btn btn-link text-muted text-decoration-none">
+                <i class="fas fa-chevron-left me-2"></i>Back to Note Details
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.next-card').forEach((btn, idx) => {
+        btn.addEventListener('click', function() {
+            document.getElementById(`card-${idx + 1}`).style.display = 'none';
+            document.getElementById(`card-${idx + 2}`).style.display = 'block';
+        });
+    });
+
+    document.querySelectorAll('.prev-card').forEach((btn, idx) => {
+        btn.addEventListener('click', function() {
+            document.getElementById(`card-${idx + 1}`).style.display = 'none';
+            document.getElementById(`card-${idx}`).style.display = 'block';
+        });
+    });
+</script>
+{% endblock %}

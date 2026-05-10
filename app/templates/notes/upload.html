@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Note{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="glass-card mt-4">
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary rounded-3 p-3 me-3 text-white">
+                    <i class="fas fa-file-pdf fa-2x"></i>
+                </div>
+                <div>
+                    <h2 class="fw-bold mb-0">Upload Study Note</h2>
+                    <p class="text-muted mb-0">Share your knowledge with the community</p>
+                </div>
+            </div>
+
+            <form method="POST" action="" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.title.label(class="form-label") }}
+                        {{ form.title(class="form-control", placeholder="e.g. Data Structures & Algorithms") }}
+                        {% for error in form.title.errors %}
+                            <span class="text-danger small">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.subject.label(class="form-label") }}
+                        {{ form.subject(class="form-control", placeholder="e.g. Computer Science") }}
+                        {% for error in form.subject.errors %}
+                            <span class="text-danger small">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    {{ form.semester.label(class="form-label") }}
+                    {{ form.semester(class="form-select form-control") }}
+                    {% for error in form.semester.errors %}
+                        <span class="text-danger small">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.description.label(class="form-label") }}
+                    {{ form.description(class="form-control", rows="4", placeholder="Briefly describe what's inside this PDF...") }}
+                    {% for error in form.description.errors %}
+                        <span class="text-danger small">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-4">
+                    {{ form.note_file.label(class="form-label") }}
+                    {{ form.note_file(class="form-control") }}
+                    <small class="text-muted">Only PDF files are allowed. Max size: 16MB.</small>
+                    {% for error in form.note_file.errors %}
+                        <br><span class="text-danger small">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="d-grid gap-2">
+                    {{ form.submit(class="btn btn-primary-custom btn-lg") }}
+                    <a href="{{ url_for('notes.dashboard') }}" class="btn btn-link text-muted text-decoration-none">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

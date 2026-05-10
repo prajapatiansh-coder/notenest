@@ -24,4 +24,4 @@ COPY . .
 EXPOSE 5000
 
 # Entry point
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "run:app"]
+CMD ["sh", "-c", "flask db upgrade && gunicorn run:app --bind 0.0.0.0:$PORT"]
